@@ -50,7 +50,7 @@ const createInstance =  (req, res) => {
     tagPromise
         .then((data) => {
         console.log('Instance tagged');
-        res.status(200).send(data)
+        res.status(201).send(data)
         })
         .catch((err) => {
         res.status(500).send(err) 
@@ -74,6 +74,7 @@ const updateInstance = (req, res) => {
     InstanceIds,
     DryRun: true,
   }
+  ec2.terminateInstances
   if(req.body.action === "STOP"){
     ec2.stopInstances(params, (err, data) => {
       if (err && err.code === 'DryRunOperation') {
@@ -118,4 +119,31 @@ const updateInstance = (req, res) => {
   res.status(404).send("action not found")
 } 
 
-module.exports = { createInstance, listInstance, updateInstance }
+const terminateInstance = (req, res) => {
+  AWS.config.update({region: "us-east-2"});
+
+  const ec2 = new AWS.EC2({ apiVersion: 'latest' });
+
+  const instanceId = req.params.id ? req.params.id : ""
+  console.log(req.params.id)
+  if(!instanceId){
+    res.status(400).send("No ids received")
+    return
+  };
+
+  const params = {
+    InstanceIds: [instanceId]
+  };
+
+  ec2.terminateInstances(params, (err, data) => {
+    if(err){
+      console.log(err)
+      res.status(500).send(err)
+    }else{
+      console.log(data)
+      res.status(200).send(data)
+    }
+  })
+}
+
+module.exports = { createInstance, listInstance, updateInstance, terminateInstance }
